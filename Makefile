@@ -245,7 +245,7 @@ CONFIG_SHELL := $(shell if [ -x "$$BASH" ]; then echo $$BASH; \
 
 HOSTCC       = gcc
 HOSTCXX      = g++
-HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -O3 -fomit-frame-pointer
+HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -O3 -fomit-frame-pointer -std=gnu89
 HOSTCXXFLAGS = -O3 -fgcse-las
 
 # More Graphite
@@ -380,6 +380,7 @@ KBUILD_CFLAGS 	:= -Wall -DNDEBUG -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -fno-delete-null-pointer-checks \
 		   -ftree-vectorize \
 		   -mno-unaligned-access \
+		   -std=gnu89 \
 		   -fpredictive-commoning -fgcse-after-reload \
 		   -fmodulo-sched -fmodulo-sched-allow-regmoves \
 		   -mtune=cortex-a15 -mfpu=neon \
