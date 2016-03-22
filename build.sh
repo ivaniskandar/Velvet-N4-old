@@ -11,24 +11,23 @@ clear
 # Resources
 THREAD="-j9"
 KERNEL="zImage"
-DEFCONFIG="hells_defconfig"
+DEFCONFIG="velvet_defconfig"
 
 # Kernel Details
-BASE_HC_VER="hC"
-VER="-b88-M"
+BASE_HC_VER="Velvet"
+VER="-mm"
 HC_VER="$BASE_HC_VER$VER"
 
 # Vars
-export LOCALVERSION=-`echo $HC_VER`
+export LOCALVERSION=-`echo $BASE_HC_VER`
 export ARCH=arm
 export SUBARCH=arm
 
 # Paths
 KERNEL_DIR=`pwd`
-REPACK_DIR="${HOME}/Android/Kernel/hC-N4-anykernel"
-ZIP_MOVE="${HOME}/Android/Kernel/hC-releases/N4"
-ZIMAGE_DIR="${HOME}/Android/Kernel/hells-Core-N4/arch/arm/boot"
-DB_FOLDER="${HOME}/Dropbox/Kernel-Betas/N4"
+REPACK_DIR="${HOME}/android/kernel/Velvet-N4-anykernel"
+ZIP_MOVE="${HOME}/android/kernel"
+ZIMAGE_DIR="${HOME}/android/kernel/Velvet-N4/arch/arm/boot"
 
 # Functions
 function clean_all {
@@ -49,12 +48,6 @@ function make_zip {
 		cd $KERNEL_DIR
 }
 
-function copy_dropbox {
-		cd $ZIP_MOVE
-		cp -vr  `echo $HC_VER`.zip $DB_FOLDER
-		cd $KERNEL_DIR
-}
-
 DATE_START=$(date +"%s")
 
 echo -e "${green}"
@@ -69,7 +62,7 @@ echo -e "${red}"; echo -e "${blink_red}"; echo "$HC_VER"; echo -e "${restore}";
 
 echo -e "${green}"
 echo "-----------------"
-echo "Making hC Kernel:"
+echo "Making Velvet Kernel:"
 echo "-----------------"
 echo -e "${restore}"
 
@@ -100,7 +93,6 @@ case "$cchoice" in
 		echo "[.....Moving `echo $HC_VER`.....]"
 		echo
 		echo -e "${restore}"
-		copy_dropbox
 		break
 		;;
 	2 )
@@ -121,7 +113,6 @@ case "$cchoice" in
 		echo "[.....Moving `echo $HC_VER`.....]"
 		echo
 		echo -e "${restore}"
-		copy_dropbox
 		break
 		;;
 	3 )
