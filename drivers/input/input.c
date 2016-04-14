@@ -28,10 +28,6 @@
 #include <linux/rcupdate.h>
 #include "input-compat.h"
 
-#ifdef CONFIG_TOUCH_WAKE
-#include <linux/touch_wake.h>
-#endif
-
 MODULE_AUTHOR("Vojtech Pavlik <vojtech@suse.cz>");
 MODULE_DESCRIPTION("Input core");
 MODULE_LICENSE("GPL");
@@ -285,15 +281,7 @@ static int input_get_disposition(struct input_dev *dev,
 	case EV_KEY:
 		if (is_event_supported(code, dev->keybit, KEY_MAX) &&
 		    !!test_bit(code, dev->key) != value) {
-#ifdef CONFIG_TOUCH_WAKE
-			if (code == KEY_POWER && touchwake_is_enabled() &&
-						!device_is_suspended()) {
-				if (value == 1)
-					powerkey_pressed();
-				else if (value == 0)
-          				powerkey_released();
-        		}
-#endif
+
 			if (value != 2) {
 				__change_bit(code, dev->key);
 				if (value)
@@ -1853,22 +1841,18 @@ static unsigned int input_estimate_events_per_packet(struct input_dev *dev)
 
 	events = mt_slots + 1; /* count SYN_MT_REPORT and SYN_REPORT */
 
-	if (test_bit(EV_ABS, dev->evbit)) {
-		for (i = 0; i < ABS_CNT; i++) {
-			if (test_bit(i, dev->absbit)) {
-				if (input_is_mt_axis(i))
-					events += mt_slots;
-				else
-					events++;
-			}
+	for (i = 0; i < ABS_CNT; i++) {
+		if (test_bit(i, dev->absbit)) {
+			if (input_is_mt_axis(i))
+				events += mt_slots;
+			else
+				events++;
 		}
 	}
 
-	if (test_bit(EV_REL, dev->evbit)) {
-		for (i = 0; i < REL_CNT; i++)
-			if (test_bit(i, dev->relbit))
-				events++;
-	}
+	for (i = 0; i < REL_CNT; i++)
+		if (test_bit(i, dev->relbit))
+			events++;
 
 	/* Make room for KEY and MSC events */
 	events += 7;
@@ -2273,3 +2257,4 @@ static void __exit input_exit(void)
 
 subsys_initcall(input_init);
 module_exit(input_exit);
+
