@@ -245,8 +245,12 @@ CONFIG_SHELL := $(shell if [ -x "$$BASH" ]; then echo $$BASH; \
 
 HOSTCC       = gcc
 HOSTCXX      = g++
-HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -O3 -fomit-frame-pointer -fgcse-las
+HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -O3 -fomit-frame-pointer
 HOSTCXXFLAGS = -O3 -fgcse-las
+
+# More Graphite
+HOSTCXXFLAGS += -fgraphite -floop-flatten -floop-parallelize-all -ftree-loop-linear -floop-interchange -floop-strip-mine -floop-block
+HOSTCFLAGS   += -fgraphite -floop-flatten -floop-parallelize-all -ftree-loop-linear -floop-interchange -floop-strip-mine -floop-block
 
 # Decide whether to build built-in, modular, or both.
 # Normally, just do built-in.
@@ -347,13 +351,15 @@ CHECK		= sparse
 
 CHECKFLAGS     := -D__linux__ -Dlinux -D__STDC__ -Dunix -D__unix__ \
 		   -Wbitwise -Wno-return-void $(CF)
-KERNEL_FLAGS 	=  -O3 -munaligned-access -fgcse-sm -fgcse-las -fsched-spec-load -fforce-addr -ffast-math -fsingle-precision-constant -mtune=cortex-a15 -marm -mfpu=neon-vfpv4 -ftree-vectorize -mvectorize-with-neon-quad -funroll-loops -ftree-loop-im -ftree-loop-ivcanon -fmodulo-sched -fmodulo-sched-allow-regmoves -fivopts -fgraphite -floop-flatten -floop-parallelize-all -ftree-loop-linear -floop-interchange -floop-strip-mine -floop-block -floop-nest-optimize -frename-registers -std=gnu89 -fira-loop-pressure
+
+KERNEL_FLAGS 	= -Ofast -DNDEBUG -munaligned-access -fgcse-lm -fgcse-sm -fsingle-precision-constant -fforce-addr -fsched-spec-load -mtune=cortex-a15 -marm -mfpu=neon-vfpv4 -ftree-vectorize -mvectorize-with-neon-quad -fgcse-after-reload -fgcse-las -funroll-loops -ftree-loop-im -ftree-loop-ivcanon -fivopts -fmodulo-sched -floop-nest-optimize -frename-registers -fira-loop-pressure -fpredictive-commoning -ffast-math -std=gnu89 $(GRAPHITE_FLAGS)
 MOD_FLAGS 	= -DMODULE $(KERNEL_FLAGS)
-CFLAGS_MODULE 	= $(MODFLAGS)
+CFLAGS_MODULE 	= $(MODFLAGS) -fno-pic
 AFLAGS_MODULE 	= $(MODFLAGS)
 LDFLAGS_MODULE 	= -T $(srctree)/scripts/module-common.lds
-CFLAGS_KERNEL  	= $(MODFLAGS)
-AFLAGS_KERNEL 	= $(MODFLAGS)
+CFLAGS_KERNEL  	= $(KERNELFLAGS)
+GRAPHITE_FLAGS  = -fgraphite -floop-flatten -floop-parallelize-all -ftree-loop-linear -floop-interchange -floop-strip-mine -floop-block
+AFLAGS_KERNEL 	= $(KERNELFLAGS)
 CFLAGS_GCOV   	= -fprofile-arcs -ftest-coverage
 
 # Use LINUXINCLUDE when you must reference the include/ directory.
@@ -365,15 +371,19 @@ LINUXINCLUDE    := -I$(srctree)/arch/$(hdr-arch)/include \
 
 KBUILD_CPPFLAGS := -D__KERNEL__
 
-KBUILD_CFLAGS 	:= -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
+KBUILD_CFLAGS 	:= -Wall -DNDEBUG -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -fno-strict-aliasing -fno-common \
 		   -Werror-implicit-function-declaration \
 		   -Wno-format-security \
+		   -Wno-maybe-uninitialized \
+                   -Wno-sizeof-pointer-memaccess \
 		   -fno-delete-null-pointer-checks \
 		   -ftree-vectorize \
 		   -mno-unaligned-access \
-		   -Wno-sizeof-pointer-memaccess \
-		    $(KERNEL_FLAGS)
+		   -fpredictive-commoning -fgcse-after-reload \
+		   -fmodulo-sched -fmodulo-sched-allow-regmoves \
+		   -mtune=cortex-a15 -mfpu=neon \
+		   $(GRAPHITE_FLAGS)
 
 KBUILD_AFLAGS_KERNEL :=
 KBUILD_CFLAGS_KERNEL :=
@@ -448,7 +458,7 @@ asm-generic:
 
 no-dot-config-targets := clean mrproper distclean \
 			 cscope gtags TAGS tags help %docs check% coccicheck \
-			 include/linux/version.h headers_% archheaders archscripts \
+			 include/linux/version.h headers_% \
 			 kernelversion %src-pkg
 
 config-targets := 0
@@ -567,7 +577,7 @@ all: vmlinux
 ifdef CONFIG_CC_OPTIMIZE_FOR_SIZE
 KBUILD_CFLAGS	+= -Os $(call cc-disable-warning,maybe-uninitialized,)
 else
-KBUILD_CFLAGS	+= -O3
+KBUILD_CFLAGS	+= -Ofast -fmodulo-sched -fmodulo-sched-allow-regmoves -fno-tree-vectorize -fno-inline-functions
 KBUILD_CFLAGS   += $(call cc-disable-warning,maybe-uninitialized) -fno-inline-functions
 KBUILD_CFLAGS   += $(call cc-disable-warning,array-bounds)
 endif
@@ -608,7 +618,7 @@ KBUILD_CFLAGS	+= -fomit-frame-pointer
 #endif
 
 ifdef CONFIG_DEBUG_INFO
-KBUILD_CFLAGS	+= -g
+KBUILD_CFLAGS	+= -gdwarf-2
 KBUILD_AFLAGS	+= -gdwarf-2
 endif
 
@@ -997,10 +1007,10 @@ prepare1: prepare2 include/linux/version.h include/generated/utsrelease.h \
                    include/config/auto.conf
 	$(cmd_crmodverdir)
 
-archprepare: archheaders archscripts prepare1 scripts_basic
+archprepare: prepare1 scripts_basic
 
 prepare0: archprepare FORCE
-	$(Q)$(MAKE) $(build)=.
+	$(Q)$(MAKE) $(build)=. missing-syscalls
 
 # All the preparing..
 prepare: prepare0
@@ -1064,14 +1074,8 @@ hdr-inst := -rR -f $(srctree)/scripts/Makefile.headersinst obj
 # If we do an all arch process set dst to asm-$(hdr-arch)
 hdr-dst = $(if $(KBUILD_HEADERS), dst=include/asm-$(hdr-arch), dst=include/asm)
 
-PHONY += archheaders
-archheaders:
-
-PHONY += archscripts
-archscripts:
-
 PHONY += __headers
-__headers: include/linux/version.h scripts_basic asm-generic archheaders archscripts FORCE
+__headers: include/linux/version.h scripts_basic asm-generic FORCE
 	$(Q)$(MAKE) $(build)=scripts build_unifdef
 
 PHONY += headers_install_all
