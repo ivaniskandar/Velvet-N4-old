@@ -12,12 +12,21 @@ clear
 THREAD="-j6"
 KERNEL="zImage"
 DEFCONFIG="velvet_defconfig"
+CM_CHECK=`grep -c "case MDP_YCBYCR_H2V1:" drivers/video/msm/mdp4_overlay.c`
 
 # Kernel Details
 BASE_HC_VER="Velvet"
 VERSION=1
 DEVICE="Mako"
+if [[ "$1" =~ "cm" || "$1" =~ "CM" ]] ; then
+HC_VER="$BASE_HC_VER-V$VERSION-$DEVICE-CM"
+
+if [ $CM_CHECK -eq 0 ] ; then
+git am CM/*
+fi
+else
 HC_VER="$BASE_HC_VER-V$VERSION-$DEVICE"
+fi
 
 # Vars
 export LOCALVERSION=-`echo $BASE_HC_VER`
@@ -53,7 +62,7 @@ function make_zip {
 DATE_START=$(date +"%s")
 
 echo -e "${green}"
-echo "hC Kernel Creation Script:"
+echo "Velvet Kernel Creation Script:"
 echo
 
 echo "---------------"
@@ -94,6 +103,10 @@ case "$cchoice" in
 		echo
 		echo "[.....Moving `echo $HC_VER`.....]"
 		echo
+		if [[ "$1" =~ "cm" || "$1" =~ "CM" ]] ; then
+		echo "[.....Reverting CM patches.....]"
+		git reset --hard HEAD~3
+		fi
 		echo -e "${restore}"
 		break
 		;;
@@ -103,6 +116,7 @@ case "$cchoice" in
 		echo "[....Building `echo $HC_VER`....]"
 		echo
 		echo -e "${restore}"
+		let "VERSION -= 1"
 		make_kernel
 		echo -e "${green}"
 		echo
@@ -114,10 +128,20 @@ case "$cchoice" in
 		echo
 		echo "[.....Moving `echo $HC_VER`.....]"
 		echo
+		if [[ "$1" =~ "cm" || "$1" =~ "CM" ]] ; then
+		echo "[.....Reverting CM patches.....]"
+		git reset --hard HEAD~3
+		fi
 		echo -e "${restore}"
 		break
 		;;
 	3 )
+		echo -e "${green}"
+		if [[ "$1" =~ "cm" || "$1" =~ "CM" ]] ; then
+		echo "[.....Reverting CM patches.....]"
+		git reset --hard HEAD~3
+		echo -e "${restore}"
+		fi
 		break
 		;;
 	* )
