@@ -9,14 +9,15 @@ restore='\033[0m'
 clear
 
 # Resources
-THREAD="-j9"
+THREAD="-j6"
 KERNEL="zImage"
 DEFCONFIG="velvet_defconfig"
 
 # Kernel Details
 BASE_HC_VER="Velvet"
-VER="-mm"
-HC_VER="$BASE_HC_VER$VER"
+VERSION=1
+DEVICE="Mako"
+HC_VER="$BASE_HC_VER-V$VERSION-$DEVICE"
 
 # Vars
 export LOCALVERSION=-`echo $BASE_HC_VER`
@@ -36,6 +37,7 @@ function clean_all {
 }
 
 function make_kernel {
+		echo $VERSION > .version
 		make $DEFCONFIG
 		make $THREAD
 		cp -vr $ZIMAGE_DIR/$KERNEL $REPACK_DIR/kernel
