@@ -46,15 +46,16 @@ function clean_all {
 }
 
 function make_kernel {
+		let "VERSION -= 1"
 		echo $VERSION > .version
 		make $DEFCONFIG
 		make $THREAD
-		cp -vr $ZIMAGE_DIR/$KERNEL $REPACK_DIR/kernel
+		cp -vr $ZIMAGE_DIR/$KERNEL $REPACK_DIR/zImage
 }
 
 function make_zip {
 		cd $REPACK_DIR
-		zip -9 -r `echo $HC_VER`.zip .
+		zip -r9 `echo $HC_VER`.zip * -x README .
 		mv  `echo $HC_VER`.zip $ZIP_MOVE
 		cd $KERNEL_DIR
 }
@@ -116,7 +117,6 @@ case "$cchoice" in
 		echo "[....Building `echo $HC_VER`....]"
 		echo
 		echo -e "${restore}"
-		let "VERSION -= 1"
 		make_kernel
 		echo -e "${green}"
 		echo
@@ -139,8 +139,9 @@ case "$cchoice" in
 		echo -e "${green}"
 		if [[ "$1" =~ "cm" || "$1" =~ "CM" ]] ; then
 		echo "[.....Reverting CM patches.....]"
-		git reset --hard HEAD~3
 		echo -e "${restore}"
+		echo
+		git reset --hard HEAD~3
 		fi
 		break
 		;;
