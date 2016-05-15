@@ -16,7 +16,7 @@ CM_CHECK=`grep -c "case MDP_YCBYCR_H2V1:" drivers/video/msm/mdp4_overlay.c`
 
 # Kernel Details
 BASE_HC_VER="Velvet"
-VERSION=1
+VERSION=2
 DEVICE="Mako"
 if [[ "$1" =~ "cm" || "$1" =~ "CM" ]] ; then
 HC_VER="$BASE_HC_VER-V$VERSION-$DEVICE-CM"
@@ -129,10 +129,10 @@ case "$cchoice" in
 		echo "[.....Moving `echo $HC_VER`.....]"
 		echo
 		if [[ "$1" =~ "cm" || "$1" =~ "CM" ]] ; then
-		echo "[.....Reverting CM patches.....]"
+		echo "[.....Reverting CM patches.....]"		
+		echo -e "${restore}"		
 		git reset --hard HEAD~3
 		fi
-		echo -e "${restore}"
 		break
 		;;
 	3 )
