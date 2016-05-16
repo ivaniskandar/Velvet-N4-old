@@ -20,7 +20,7 @@
 
 #define TIMEOUT		100
 
-static bool enable_msm_hsic_ws = true;
+static bool enable_msm_hsic_ws = false;
 module_param(enable_msm_hsic_ws, bool, 0644);
 
 /*
