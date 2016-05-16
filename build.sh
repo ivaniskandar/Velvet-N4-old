@@ -50,7 +50,7 @@ function make_kernel {
 		echo $VERSION > .version
 		make $DEFCONFIG
 		make $THREAD
-		cp -vr $ZIMAGE_DIR/$KERNEL $REPACK_DIR/zImage
+		cp -vr $ZIMAGE_DIR/$KERNEL $REPACK_DIR/kernel/zImage
 }
 
 function make_zip {
