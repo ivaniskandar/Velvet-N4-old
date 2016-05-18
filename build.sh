@@ -9,7 +9,7 @@ restore='\033[0m'
 clear
 
 # Resources
-THREAD="-j6"
+THREAD="-j4"
 KERNEL="zImage"
 DEFCONFIG="velvet_defconfig"
 CM_CHECK=`grep -c "case MDP_YCBYCR_H2V1:" drivers/video/msm/mdp4_overlay.c`
